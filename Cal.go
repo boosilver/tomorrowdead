@@ -13,9 +13,6 @@ type request struct {
 	Operate2 int    `json:"operate2"`
 }
 
-func timestamp() {
-	fmt.Println(time.Now().Format("03:04:0555"))
-}
 func randomInt(min, max int) int {
 	return min + rand.Intn(max-min)
 }
