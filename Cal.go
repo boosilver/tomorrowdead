@@ -1,7 +1,7 @@
 package main
 
 import (
-	"encoding/json"
+	// "encoding/json"
 	"fmt"
 	"math/rand"
 	"time"
@@ -30,19 +30,6 @@ func randomoperator() string {
 	return operator[n]
 }
 
-func main() {
-	for i := 0; i < 10; i++ {
-		rand.Seed(time.Now().UnixNano())
-		time.Sleep(500 * time.Millisecond)
-		a := randomInt(1, 100) //get an int in the 1...n range
-		o := randomoperator()
-		b := randomInt(1, 100) //get an int in the 1...n range
-		var request = request{
-			Operator: o,
-			Operate1: a,
-			Operate2: b,
-		}
-		body, _ := json.Marshal(request)
-		fmt.Println(string(body))
-	}
-}
+// func main() {
+	
+// }
