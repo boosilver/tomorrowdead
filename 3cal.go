@@ -2,12 +2,16 @@ package main
 
 import (
 	"bytes"
+	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
+	"math"
 	"math/rand"
 	"net/http"
+	"os"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -17,52 +21,57 @@ type data struct {
 	Operand1 int    `json:"operand1"`
 	Operand2 int    `json:"operand2"`
 	TX_ID    int    `json:"tx_id"`
-
-	//Time     string `json:"time"`
 }
 
-// func timestamp() string {
-// 	t := time.Now().Format("03:04:05.000")
-// 	return t
-//}
-// func calculator(Operator, operand1,operand2 string int int )(string ) {
-// 	var r1,s1 = 0.0," "
+var testdata = [][]string{
+	{"ID", "TIME", " PROBLEM", "RESULT"},
+}
 
-// 	x := float32(operand1) //int to float
-// 	y := float32(operand2)
-// 	if Operator == "+" {
-// 		r1 = x+y
-// 		s1 = fmt.Sprintf("%f", r1)
-// 		return s1
+func timestamp() string {
+	t := time.Now().Format("03:04:05.000")
+	return t
+}
 
-// 	}
-// 	else if Operator == "-"{
-// 		r1 = x-y
-// 		s1 = fmt.Sprintf("%f", r1)
-// 		return s1
-// 	}
-// 	else if Operator == "*"{
-// 		r1 = x*y
-// 		s1 = fmt.Sprintf("%f", r1)
-// 		return s1
-// 	}
-// 	else if Operator == "/"{
-// 		r1 = x/y
-// 		s1 = fmt.Sprintf("%f", r1)
-// 		return s1
-// 	}
+func calculator(Operator, operand1, operand2 string) string {
+	var r1, s1 = 0.0, " "
+	f, _ := strconv.ParseFloat(operand1, 32)
 
-// 	else if Operator == "DIV"{
-// 		r1 = math.Floor(x/y)
-// 		s1 = fmt.Sprintf("%f", r1)
-// 	}
-// 	else if Operator == "MOD"{
-// 		r1 := math.Mod(x,y)
-// 		s1 = fmt.Sprintf("%f", r1)
+	f2, _ := strconv.ParseFloat(operand2, 32)
 
-// 	}
+	if Operator == "+" {
+		r1 = f + f2
+		s1 = fmt.Sprintf("%f", r1)
+		return s1
 
-// 	}
+	}
+	if Operator == "-" {
+		r1 = f - f2
+		s1 = fmt.Sprintf("%f", r1)
+		return s1
+	}
+	if Operator == "*" {
+		r1 = f * f2
+		s1 = fmt.Sprintf("%f", r1)
+		return s1
+	}
+	if Operator == "/" {
+		r1 = f / f2
+		s1 = fmt.Sprintf("%f", r1)
+		return s1
+	}
+
+	if Operator == "DIV" {
+		r1 = math.Floor(f / f2)
+		s1 = fmt.Sprintf("%f", r1)
+		return s1
+	}
+	if Operator == "MOD" {
+		r1 := math.Mod(f, f2)
+		s1 = fmt.Sprintf("%f", r1)
+		return s1
+	}
+	return s1
+}
 
 func randomInt(min, max int) int {
 	return min + rand.Intn(max-min)
@@ -110,14 +119,35 @@ func main() {
 	var wg sync.WaitGroup
 	ch := make(chan string)
 	var response []string
-	for i := 1; i < 1000; i++ {
+
+	file, err := os.Create("result.csv")
+	checkError("connot creat file", err)
+	defer file.Close()
+	writer := csv.NewWriter(file)
+	defer writer.Flush()
+
+	for _, value := range testdata { //head of table
+		err := writer.Write(value)
+		checkError("Cannot write to file", err)
+	}
+
+	for i := 1; i < 200; i++ {
 
 		rand.Seed(time.Now().UnixNano())
 		time.Sleep(0 * time.Millisecond)
 		a := randomInt(-100, 100) //get an int in the 1...n range
 		o := randomoperator()
 		b := randomInt(-100, 100) //get an int in the 1...n range
-		// t := timestamp()
+		e := strconv.Itoa(i)
+		t := timestamp()
+		astring := strconv.Itoa(a)
+		bstring := strconv.Itoa(b)
+		text := astring + o + bstring
+		ans := calculator(o, astring, bstring)
+
+		row := []string{e, t, text, ans}
+		err := writer.Write(row)
+		checkError("Cannot write to file", err)
 
 		var data = data{
 			Operator: o,
