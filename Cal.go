@@ -25,12 +25,44 @@ type data struct {
 // 	t := time.Now().Format("03:04:05.000")
 // 	return t
 //}
-// func calculator(ot, or1,or2 string int int )(float,float ) {
-// 	var r1,r2 = 0, 0.0
-// 	if ot == "+" {
+// func calculator(Operator, operand1,operand2 string int int )(string ) {
+// 	var r1,s1 = 0.0," "
+
+// 	x := float32(operand1) //int to float
+// 	y := float32(operand2)
+// 	if Operator == "+" {
+// 		r1 = x+y
+// 		s1 = fmt.Sprintf("%f", r1)
+// 		return s1
 
 // 	}
-// }
+// 	else if Operator == "-"{
+// 		r1 = x-y
+// 		s1 = fmt.Sprintf("%f", r1)
+// 		return s1
+// 	}
+// 	else if Operator == "*"{
+// 		r1 = x*y
+// 		s1 = fmt.Sprintf("%f", r1)
+// 		return s1
+// 	}
+// 	else if Operator == "/"{
+// 		r1 = x/y
+// 		s1 = fmt.Sprintf("%f", r1)
+// 		return s1
+// 	}
+
+// 	else if Operator == "DIV"{
+// 		r1 = math.Floor(x/y)
+// 		s1 = fmt.Sprintf("%f", r1)
+// 	}
+// 	else if Operator == "MOD"{
+// 		r1 := math.Mod(x,y)
+// 		s1 = fmt.Sprintf("%f", r1)
+
+// 	}
+
+// 	}
 
 func randomInt(min, max int) int {
 	return min + rand.Intn(max-min)
