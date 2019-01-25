@@ -1,28 +1,15 @@
 package main
 
 import (
-	"encoding/csv"
-	"log"
-	"os"
+	"fmt"
 )
 
 func main() {
-	records := [][]string{
-		{"first_name", "last_name", "username"},
-		{"Rob", "Pike", "rob"},
-		{"Ken", "Thompson", "ken"},
-		{"Robert", "Griesemer", "gri"},
+	// values := []interface{}{"mydata", 1234567890.123}
+	g := -3332555.
+	values := []interface{}{"ans", g}
+	for _, g := range values {
+		// fmt.Printf("%.4e\n", v)
+		fmt.Printf("%.5e\n", g)
 	}
-
-	w := csv.NewWriter(os.Stdout)
-	w.WriteAll(records) // calls Flush internally
-
-	if err := w.Error(); err != nil {
-		log.Fatalln("error writing csv:", err)
-	}
-	// Output:
-	// first_name,last_name,username
-	// Rob,Pike,rob
-	// Ken,Thompson,ken
-	// Robert,Griesemer,gri
 }

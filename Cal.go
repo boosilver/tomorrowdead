@@ -6,15 +6,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-<<<<<<< HEAD
-	"math"
 	"math/rand"
 	"net/http"
-	"strconv"
-=======
-	"math/rand"
-	"net/http"
->>>>>>> 0a5b952cbd17cc30ce4670d3e833061fe71a297d
 	"sync"
 	"time"
 )
@@ -24,63 +17,6 @@ type data struct {
 	Operand1 int    `json:"operand1"`
 	Operand2 int    `json:"operand2"`
 	TX_ID    int    `json:"tx_id"`
-<<<<<<< HEAD
-
-	//Time     string `json:"time"`
-}
-
-func timestamp() string {
-	t := time.Now().Format("03:04:05.000")
-	return t
-}
-func calculator(Operator, operand1, operand2 string) string {
-	var r1, s1 = 0.0, " "
-	f, err := strconv.ParseFloat(operand1, 32)
-	if err == nil {
-		fmt.Println("operand1 =", f)
-	}
-	f2, err := strconv.ParseFloat(operand2, 32)
-	if err == nil {
-		fmt.Println("operand2 =", f2)
-	}
-	x := float64(f) //int to float
-	y := float64(f2)
-	if Operator == "+" {
-		r1 = x + y
-		s1 = fmt.Sprintf("%f", r1)
-		return s1
-
-	}
-	if Operator == "-" {
-		r1 = x - y
-		s1 = fmt.Sprintf("%f", r1)
-		return s1
-	}
-	if Operator == "*" {
-		r1 = x * y
-		s1 = fmt.Sprintf("%f", r1)
-		return s1
-	}
-	if Operator == "/" {
-		r1 = x / y
-		s1 = fmt.Sprintf("%f", r1)
-		return s1
-	}
-
-	if Operator == "DIV" {
-		r1 = math.Floor(x / y)
-		s1 = fmt.Sprintf("%f", r1)
-		return s1
-	}
-	if Operator == "MOD" {
-		r1 := math.Mod(x, y)
-		s1 = fmt.Sprintf("%f", r1)
-		return s1
-	}
-	return s1
-}
-
-=======
 
 	//Time     string `json:"time"`
 }
@@ -128,7 +64,6 @@ func calculator(Operator, operand1, operand2 string) string {
 
 // 	}
 
->>>>>>> 0a5b952cbd17cc30ce4670d3e833061fe71a297d
 func randomInt(min, max int) int {
 	return min + rand.Intn(max-min)
 }
@@ -176,17 +111,9 @@ func main() {
 	ch := make(chan string)
 	var response []string
 	for i := 1; i < 1000; i++ {
-<<<<<<< HEAD
-		if i > 50 && i < 52 || i > 500 && i < 502 {
-			time.Sleep(5000 * time.Millisecond)
-		}
-		rand.Seed(time.Now().UnixNano())
-
-=======
 
 		rand.Seed(time.Now().UnixNano())
 		time.Sleep(0 * time.Millisecond)
->>>>>>> 0a5b952cbd17cc30ce4670d3e833061fe71a297d
 		a := randomInt(-100, 100) //get an int in the 1...n range
 		o := randomoperator()
 		b := randomInt(-100, 100) //get an int in the 1...n range
@@ -220,8 +147,4 @@ func main() {
 // operator string
 // operand1 int
 // operand2 int
-<<<<<<< HEAD
 // tx_id  int
-=======
-// tx_id  int
->>>>>>> 0a5b952cbd17cc30ce4670d3e833061fe71a297d

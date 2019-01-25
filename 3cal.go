@@ -24,7 +24,7 @@ type data struct {
 }
 
 var testdata = [][]string{
-	{"ID", "TIME", " PROBLEM", "RESULT"},
+	{"ID", "TIME", " PROBLEM", "RESULT", "RESULTSCI"},
 }
 
 func timestamp() string {
@@ -95,7 +95,7 @@ func checkError(message string, err error) {
 
 func post(post_data []byte, wg *sync.WaitGroup, ch chan<- string) {
 	defer wg.Done() //clear 1 stak
-	request, _ := http.NewRequest("POST", "http://35.202.123.123:3000/api/cal", bytes.NewBuffer(post_data))
+	request, _ := http.NewRequest("POST", "http://a9183ce3d200511e9a6250a2c719c0b1-1242495179.us-east-1.elb.amazonaws.com:3000/api/cal", bytes.NewBuffer(post_data))
 	request.Header.Set("Content-Type", "application/json")
 	client := &http.Client{}
 	response, err := client.Do(request)
@@ -131,38 +131,50 @@ func main() {
 		checkError("Cannot write to file", err)
 	}
 
-	for i := 1; i < 200; i++ {
+	now := time.Now()
+	after := now.Add(0 * time.Minute) // fmt.Println("\nAdd 1 Minute:", after)
+	for {
+		time.Sleep(0 * time.Second)
 
-		rand.Seed(time.Now().UnixNano())
-		time.Sleep(0 * time.Millisecond)
-		a := randomInt(-100, 100) //get an int in the 1...n range
-		o := randomoperator()
-		b := randomInt(-100, 100) //get an int in the 1...n range
-		e := strconv.Itoa(i)
-		t := timestamp()
-		astring := strconv.Itoa(a)
-		bstring := strconv.Itoa(b)
-		text := astring + o + bstring
-		ans := calculator(o, astring, bstring)
+		for i := 1; i < 100; i++ {
+			rand.Seed(time.Now().UnixNano())
+			time.Sleep(0 * time.Millisecond)
+			a := randomInt(-100, 100) //get an int in the 1...n range
+			o := randomoperator()
+			b := randomInt(-100, 100) //get an int in the 1...n range
+			e := strconv.Itoa(i)
+			t := timestamp()
+			astring := strconv.Itoa(a)
+			bstring := strconv.Itoa(b)
+			text := astring + o + bstring
+			ans := calculator(o, astring, bstring)
+			ans2, _ := strconv.ParseFloat(ans, 64)
+			anssci := fmt.Sprintf("%.4e\n", ans2)
+			fmt.Println("ans value ", ans)
+			fmt.Println("v value", anssci)
+			row := []string{e, t, text, ans, anssci}
+			err := writer.Write(row)
+			checkError("Cannot write to file", err)
 
-		row := []string{e, t, text, ans}
-		err := writer.Write(row)
-		checkError("Cannot write to file", err)
+			var data = data{
+				Operator: o,
+				Operand1: a,
+				Operand2: b,
+				TX_ID:    i,
+			}
+			body, _ := json.Marshal(data)
+			fmt.Println(string(body))
 
-		var data = data{
-			Operator: o,
-			Operand1: a,
-			Operand2: b,
-			TX_ID:    i,
+			post_data, _ := json.Marshal(data)
+			wg.Add(1) //add 1
+			go post(post_data, &wg, ch)
+
+		} //for i
+		now = time.Now()
+		if now.After(after) {
+			break
 		}
-		body, _ := json.Marshal(data)
-		fmt.Println(string(body))
-
-		post_data, _ := json.Marshal(data)
-		wg.Add(1) //add 1
-		go post(post_data, &wg, ch)
-
-	} //for
+	}
 	go func() {
 		wg.Wait() //wait wg.=0
 		close(ch)
