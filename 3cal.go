@@ -132,13 +132,13 @@ func main() {
 	}
 
 	now := time.Now()
-	after := now.Add(0 * time.Minute) // fmt.Println("\nAdd 1 Minute:", after)
+	after := now.Add(5 * time.Minute) // fmt.Println("\nAdd 1 Minute:", after)
 	for {
 		time.Sleep(0 * time.Second)
 
-		for i := 1; i < 100; i++ {
+		for i := 1; i < 500; i++ {
 			rand.Seed(time.Now().UnixNano())
-			time.Sleep(0 * time.Millisecond)
+			time.Sleep(3 * time.Millisecond)
 			a := randomInt(-100, 100) //get an int in the 1...n range
 			o := randomoperator()
 			b := randomInt(-100, 100) //get an int in the 1...n range
@@ -150,8 +150,8 @@ func main() {
 			ans := calculator(o, astring, bstring)
 			ans2, _ := strconv.ParseFloat(ans, 64)
 			anssci := fmt.Sprintf("%.4e\n", ans2)
-			fmt.Println("ans value ", ans)
-			fmt.Println("v value", anssci)
+			// fmt.Println("ans value ", ans)
+			// fmt.Println("v value", anssci)
 			row := []string{e, t, text, ans, anssci}
 			err := writer.Write(row)
 			checkError("Cannot write to file", err)
