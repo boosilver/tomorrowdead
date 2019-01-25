@@ -108,13 +108,13 @@ type Result struct {
 	Tx_id int `json:"tx_id"`
 }
 
-func post(e string,post_data []byte, wg *sync.WaitGroup, ch chan<- string) {
+func post(e string,post_data []byte, wg *sync.WaitGroup, ch chan<- string)[]byte {
 	defer wg.Done() //clear 1 stak
 	request, _ := http.NewRequest("POST", "http://a9183ce3d200511e9a6250a2c719c0b1-1242495179.us-east-1.elb.amazonaws.com:3000/api/cal", bytes.NewBuffer(post_data))
 	request.Header.Set("Content-Type", "application/json")
 	client := &http.Client{}
 	response, err := client.Do(request)
-	// var a []byte 
+	var a []byte 
 	// data1, _ := ioutil.ReadAll(response.Body)
 	//fmt.Println(err)
 	if err != nil {
@@ -122,7 +122,7 @@ func post(e string,post_data []byte, wg *sync.WaitGroup, ch chan<- string) {
 	} else {
 
 		data, _ := ioutil.ReadAll(response.Body)
-		
+		return data
 		// fmt.Println(string(data))
 		ch <- string(data)
 		if string(data) == "Bad Request" {
@@ -130,12 +130,12 @@ func post(e string,post_data []byte, wg *sync.WaitGroup, ch chan<- string) {
 		}
 		// fmt.Println("")
 	} //return data1
-	
+	return a
 }
 func main() {
 	var wg sync.WaitGroup
 	ch := make(chan string)
-	// var response []string
+	var response []string
 
 	file, err := os.Create("result.csv")
 	checkError("connot creat file", err)
@@ -157,7 +157,7 @@ func main() {
 		err := writer2.Write(value2)
 		checkError("Cannot write to file", err)
 	}
-	for i := 1; i < 2000; i++ {
+	for i := 1; i < 10; i++ {
 
 		rand.Seed(time.Now().UnixNano())
 		time.Sleep(0 * time.Millisecond)
@@ -187,10 +187,30 @@ func main() {
 		post_data, _ := json.Marshal(data)
 		wg.Add(1) //add 1
 		// go post(e,post_data, &wg, ch)
-		go post(e,post_data, &wg, ch)
+		data1 := post(e,post_data, &wg, ch)
 		// fmt.Println(string(data1))
 		////////////////////////////////////////////////
+		res := Result{}
+			err = json.Unmarshal(data1, &res)
+			if err != nil {
+				fmt.Println("There was an error:", err)
+				
+			}
+				fmt.Printf(" = %v\t", res.Resultfloat)
+				fmt.Printf(" %v\t", res.Resultseientific)
+				fmt.Printf(" %v", res.Tx_id)
+				fmt.Println()
 		
+		r:=res.Resultfloat
+			rf := fmt.Sprintf("%.6f", r)
+			id := strconv.Itoa(res.Tx_id)
+			data2 := []string{id, rf,res.Resultseientific}
+			err = writer2.Write(data2)
+			checkError("Cannot write to file", err)
+			if ans !=rf{
+				fmt.Println("error")
+			}else {fmt.Println("pass")}
+			
 
 	} //for
 	go func() {
@@ -198,29 +218,7 @@ func main() {
 		close(ch)
 	}()
 	for res := range ch {
-		// response = append(response, res)
-		data1 := []byte(res)
-		ress := Result{}
-			err = json.Unmarshal(data1, &ress)
-			if err != nil {
-				fmt.Println("There was an error:", err)
-				
-			}
-				fmt.Printf(" = %v\t", ress.Resultfloat)
-				fmt.Printf(" %v\t", ress.Resultseientific)
-				fmt.Printf(" %v", ress.Tx_id)
-				fmt.Println()
-		
-			r := ress.Resultfloat
-			rf := fmt.Sprintf("%.6f", r)
-			id := strconv.Itoa(ress.Tx_id)
-			data2 := []string{id, rf,ress.Resultseientific}
-			err = writer2.Write(data2)
-			checkError("Cannot write to file", err)
-			// if ans !=rf{
-			// 	fmt.Println("error")
-			// }else {fmt.Println("pass")}
-			
+		response = append(response, res)
 	}
 	//fmt.Print(response)
 } 
