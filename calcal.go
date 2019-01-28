@@ -36,6 +36,16 @@ var putdata = [][]string{
 	{"Resultseientific", "Resultseientific", "TX_ID"},
 }
 
+var (
+	musuccesscounter sync.Mutex // guards balance
+	successcounter   int
+)
+
+var (
+	mufailcounter sync.Mutex // guards balance
+	failcounter   int
+)
+
 func timestamp() string {
 	t := time.Now().Format("03:04:05.000")
 	return t
@@ -87,7 +97,7 @@ func randomInt(min, max int) int {
 }
 
 func randomoperator() string {
-	rand.Seed(time.Now().Unix())
+	//	rand.Seed(time.Now().Unix())
 	operator := []string{
 		"+", "-", "*", "/", "DIV", "MOD",
 	}
@@ -103,31 +113,48 @@ func checkError(message string, err error) {
 }
 
 func post(post_data []byte, wg *sync.WaitGroup, ch chan<- string) {
-	defer wg.Done() //clear 1 stak
-	request, _ := http.NewRequest("POST", "http://a9183ce3d200511e9a6250a2c719c0b1-1242495179.us-east-1.elb.amazonaws.com:3000/api/cal", bytes.NewBuffer(post_data))
-	request.Header.Set("Content-Type", "application/json")
-	client := &http.Client{}
-	response, err := client.Do(request)
-	//fmt.Println(err)
-	if err != nil {
-		fmt.Printf("The HTTP request failed with error %s\n", err)
-	} else {
 
-		data, _ := ioutil.ReadAll(response.Body)
-		//
-		fmt.Println(string(data)) //ข้อมูลที่รับกลับมาทั้งหมด
-		ch <- string(data)
-		if string(data) == "Bad Request" {
-			fmt.Println("OMG")
+	defer wg.Done() //clear 1 stack
+	request, err := http.NewRequest("POST", "http://a9183ce3d200511e9a6250a2c719c0b1-1242495179.us-east-1.elb.amazonaws.com:3000/api/cal", bytes.NewBuffer(post_data))
+	// request.Close = true
+	if err == nil {
+		request.Header.Set("Content-Type", "application/json")
+		client := &http.Client{}
+		response, err := client.Do(request)
+		if err != nil {
+			mufailcounter.Lock()
+			failcounter++
+			mufailcounter.Unlock()
+			fmt.Printf("die at client.Do : %s\n", err)
+		} else {
+			musuccesscounter.Lock()
+			successcounter++
+			musuccesscounter.Unlock()
+			data, _ := ioutil.ReadAll(response.Body)
+			ch <- string(data)
+			if string(data) == "Bad Request" {
+				fmt.Println("OMG")
+			}
 		}
-		// fmt.Println("")
-	} //else
-
+		// defer response.Body.Close()
+	} else {
+		fmt.Printf("die at http.NewRequest : %s\n", err)
+		failcounter++
+	}
 }
 
 func main() {
 	var wg sync.WaitGroup
+	var sleepwg sync.WaitGroup
+	var counter int
+
+	start_time := time.Now()
+
 	ch := make(chan string)
+
+	rand.Seed(time.Now().Unix())
+	successcounter = 0
+	failcounter = 0
 
 	file, err := os.Create("result.csv")
 	checkError("connot creat file", err)
@@ -152,26 +179,37 @@ func main() {
 	}
 
 	now := time.Now()
-	after := now.Add(5 * time.Second) // fmt.Println("\nAdd 1 Minute:", after)
-	for {
-		time.Sleep(0 * time.Second)
 
-		for i := 0; i < 10; i++ {
-			rand.Seed(time.Now().UnixNano())
+	sectorun, _ := strconv.Atoi(os.Args[1])
+	tpstorun, _ := strconv.Atoi(os.Args[2])
+
+	after := now.Add(time.Second * time.Duration(sectorun)) // fmt.Println("\nAdd 1 Minute:", after) // here number of sec
+	counter = 0
+	for {
+		//time.Sleep(0 * time.Second)
+		sleepwg.Add(1)
+		go func() {
+			defer sleepwg.Done()
+			time.Sleep(1 * time.Second)
+		}()
+
+		for i := 0; i < tpstorun; i++ { //i = tps
+			counter = counter + 1
+			//rand.Seed(time.Now().UnixNano())
 			time.Sleep(0 * time.Millisecond)
-			a := randomInt(-100, 100) //get an int in the 1...n range
+			a := randomInt(10, 1000) //get an int in the 1...n range
 			o := randomoperator()
-			b := randomInt(-100, 100) //get an int in the 1...n range
-			e := strconv.Itoa(i)
+			b := randomInt(100, 10000) //get an int in the 1...n range
+			e := strconv.Itoa(counter)
 			t := timestamp()
 			astring := strconv.Itoa(a)
 			bstring := strconv.Itoa(b)
 			text := astring + o + bstring
 			ans := calculator(o, astring, bstring)
 			ans2, _ := strconv.ParseFloat(ans, 64)
-			anssci := fmt.Sprintf("%.4e\n", ans2)
-			fmt.Println("ans value ", ans)
-			fmt.Println("v value", anssci)
+			anssci := fmt.Sprintf("%.4e", ans2)
+			//fmt.Println("ans value ", ans)
+			//fmt.Println("v value", anssci)
 			row := []string{e, t, text, ans, anssci}
 			err := writer.Write(row)
 			checkError("Cannot write to file", err)
@@ -180,25 +218,37 @@ func main() {
 				Operator: o,
 				Operand1: a,
 				Operand2: b,
-				TX_ID:    i,
+				TX_ID:    counter,
 			}
-			body, _ := json.Marshal(data)
-			fmt.Println(string(body))
+			//body, _ := json.Marshal(data)
+			//	fmt.Println(string(body))
 
 			post_data, _ := json.Marshal(data)
 			wg.Add(1) //add 1
 			go post(post_data, &wg, ch)
 
 		} //for i
+
+		// sleep 1 sec
+
+		//time.Sleep(1 * time.Second)
+		//go func() {
+		//	sleepwg.Wait() //wait wg.=0
+		//}()
+
+		sleepwg.Wait()
+
 		now = time.Now()
 		if now.After(after) {
 			break
 		}
 	}
+
 	go func() {
 		wg.Wait() //wait wg.=0
 		close(ch)
 	}()
+
 	for res := range ch {
 		body_string := getData{}
 		json.Unmarshal([]byte(res), &body_string)
@@ -213,7 +263,20 @@ func main() {
 		checkError("Cannot write to file", err)
 
 	}
+	end_time := time.Now()
 
+	fmt.Println("-------------------------------------")
+	fmt.Println("input second to run:", sectorun)
+	fmt.Println("input tps to run   :", tpstorun)
+	fmt.Println("-------------------------------------")
+	fmt.Println("total txn submit   : ", counter)
+	fmt.Println("success counter    : ", successcounter)
+	fmt.Println("fail counter       : ", failcounter)
+	fmt.Println("success + fail     : ", successcounter+failcounter)
+	fmt.Println("start time         : ", start_time)
+	fmt.Println("end time           : ", end_time)
+	fmt.Println("elapse             : ", end_time.Sub(start_time))
+	fmt.Printf("real TPS           :  %.2f", float64(successcounter)/float64(end_time.Sub(start_time))*1000000000)
 	//fmt.Print(response)
 } //main
 
