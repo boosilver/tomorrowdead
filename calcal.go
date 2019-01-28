@@ -152,11 +152,11 @@ func main() {
 	}
 
 	now := time.Now()
-	after := now.Add(0 * time.Second) // fmt.Println("\nAdd 1 Minute:", after)
+	after := now.Add(5 * time.Second) // fmt.Println("\nAdd 1 Minute:", after)
 	for {
 		time.Sleep(0 * time.Second)
 
-		for i := 1; i < 1000; i++ {
+		for i := 1; i < 10; i++ {
 			rand.Seed(time.Now().UnixNano())
 			time.Sleep(0 * time.Millisecond)
 			a := randomInt(-100, 100) //get an int in the 1...n range
