@@ -156,7 +156,7 @@ func main() {
 	for {
 		time.Sleep(0 * time.Second)
 
-		for i := 1; i < 10; i++ {
+		for i := 0; i < 10; i++ {
 			rand.Seed(time.Now().UnixNano())
 			time.Sleep(0 * time.Millisecond)
 			a := randomInt(-100, 100) //get an int in the 1...n range
