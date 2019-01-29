@@ -157,7 +157,7 @@ func main() {
 		err := writer2.Write(value2)
 		checkError("Cannot write to file", err)
 	}
-	for i := 1; i < 2000; i++ {
+	for i := 1; i < 50; i++ {
 
 		rand.Seed(time.Now().UnixNano())
 		time.Sleep(0 * time.Millisecond)
